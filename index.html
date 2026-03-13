@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>manon-metre</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --panel: #17181c;
+      --chrome: #2a2b32;
+      --accent: #e8c840;
+      --red: #e84040;
+      --green: #40e880;
+      --text: #f0ede0;
+      --dim: #6b6a60;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* Background texture */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,.015) 40px, rgba(255,255,255,.015) 41px),
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,.015) 40px, rgba(255,255,255,.015) 41px);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Brand */
+    .brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      letter-spacing: .5em;
+      color: var(--dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .brand span { color: var(--accent); }
+
+    /* Main instrument panel */
+    .instrument {
+      background: var(--panel);
+      border: 3px solid var(--chrome);
+      border-radius: 50%;
+      padding: 20px;
+      box-shadow:
+        0 0 0 6px #111,
+        0 0 0 8px #333,
+        0 0 60px rgba(0,0,0,.8),
+        inset 0 0 30px rgba(0,0,0,.5);
+      position: relative;
+    }
+
+    svg#gauge {
+      display: block;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.6));
+    }
+
+    /* Digital readout */
+    .digital {
+      background: #080b08;
+      border: 2px solid #2a3a2a;
+      border-radius: 6px;
+      padding: 6px 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      color: var(--green);
+      text-align: center;
+      letter-spacing: .1em;
+      box-shadow: inset 0 0 20px rgba(64,232,128,.08), 0 0 10px rgba(64,232,128,.15);
+      min-width: 160px;
+      text-shadow: 0 0 12px rgba(64,232,128,.7);
+      margin-top: -10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Controls row */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: none;
+      font-size: 2rem;
+      font-family: 'Bebas Neue', sans-serif;
+      cursor: pointer;
+      position: relative;
+      transition: transform .08s, box-shadow .08s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-minus {
+      background: radial-gradient(circle at 40% 35%, #c03030, #6a1010);
+      color: #fff;
+      box-shadow: 0 4px 0 #3a0808, 0 6px 20px rgba(200,50,50,.4);
+    }
+    .btn-plus {
+      background: radial-gradient(circle at 40% 35%, #50c870, #0f5a20);
+      color: #fff;
+      box-shadow: 0 4px 0 #083a18, 0 6px 20px rgba(50,200,80,.4);
+    }
+
+    .btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #3a0808 !important;
+    }
+    .btn-plus:active { box-shadow: 0 1px 0 #083a18 !important; }
+
+    /* Label under controls */
+    .status {
+      font-size: .7rem;
+      color: var(--dim);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+    .status.synced { color: var(--green); }
+    .status.syncing { color: var(--accent); }
+    .status.error { color: var(--red); }
+
+    /* Needle animation */
+    #needle {
+      transform-origin: 200px 200px;
+      transition: transform .5s cubic-bezier(.34,1.56,.64,1);
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="brand">manon<span>·</span>metre</div>
+
+  <div class="instrument">
+    <svg id="gauge" width="320" height="320" viewBox="0 0 400 400">
+      <defs>
+        <!-- Gauge face gradient -->
+        <radialGradient id="face" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stop-color="#23252e"/>
+          <stop offset="100%" stop-color="#0e0f12"/>
+        </radialGradient>
+        <!-- Needle gradient -->
+        <linearGradient id="ndl" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f5c040"/>
+          <stop offset="50%" stop-color="#e8c840"/>
+          <stop offset="100%" stop-color="#a08020"/>
+        </linearGradient>
+        <!-- Rim gradient -->
+        <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#555"/>
+          <stop offset="50%" stop-color="#999"/>
+          <stop offset="100%" stop-color="#333"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Outer rim -->
+      <circle cx="200" cy="200" r="190" fill="url(#rim)" />
+      <!-- Inner ring bolts -->
+      <circle cx="200" cy="200" r="185" fill="#1a1b1f" />
+      <!-- Bolt holes -->
+      <circle cx="200" cy="22" r="6" fill="#111" stroke="#444" stroke-width="1.5"/>
+      <circle cx="200" cy="378" r="6" fill="#111" stroke="#444" stroke-width="1.5"/>
+      <circle cx="22" cy="200" r="6" fill="#111" stroke="#444" stroke-width="1.5"/>
+      <circle cx="378" cy="200" r="6" fill="#111" stroke="#444" stroke-width="1.5"/>
+      <!-- Gauge face -->
+      <circle cx="200" cy="200" r="170" fill="url(#face)" />
+
+      <!-- Arc background (220° sweep from -220deg to 40deg) -->
+      <!-- Red zone arc (80-100) -->
+      <path id="arcRed" fill="none" stroke="#7a1515" stroke-width="16" stroke-linecap="round"
+        d="M 82 316 A 150 150 0 0 1 318 316" opacity=".6"/>
+      <!-- Green zone arc (0-60) -->
+      <path id="arcGreen" fill="none" stroke="#154a25" stroke-width="16" stroke-linecap="round"
+        d="M 50 270 A 150 150 0 0 1 162 55" opacity=".6"/>
+
+      <!-- Main arc track -->
+      <path id="arcTrack" fill="none" stroke="#2a2c35" stroke-width="10"
+        d="M 50 310 A 155 155 0 1 1 350 310"/>
+
+      <!-- Tick marks -->
+      <g id="ticks" stroke="#888" stroke-linecap="round"></g>
+      <!-- Tick labels -->
+      <g id="labels" font-family="'Share Tech Mono', monospace" font-size="16" fill="#aaa" text-anchor="middle"></g>
+
+      <!-- Scale arc highlight -->
+      <path id="arcFill" fill="none" stroke="#e8c840" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+
+      <!-- Center pivot shadow -->
+      <circle cx="200" cy="200" r="22" fill="#060708"/>
+
+      <!-- Needle -->
+      <g id="needle">
+        <polygon points="200,52 196,200 204,200" fill="url(#ndl)" filter="url(#glow)"/>
+        <polygon points="200,220 197,200 203,200" fill="#c03030"/>
+      </g>
+
+      <!-- Center cap -->
+      <circle cx="200" cy="200" r="14" fill="#c8a030" />
+      <circle cx="200" cy="200" r="10" fill="#e8c840" />
+      <circle cx="200" cy="200" r="5" fill="#a07820" />
+
+      <!-- Brand text on gauge -->
+      <text x="200" y="285" text-anchor="middle" font-family="'Bebas Neue', sans-serif"
+        font-size="14" fill="#4a4a40" letter-spacing="6">MANON·METRE</text>
+
+      <!-- Unit label -->
+      <text x="200" y="155" text-anchor="middle" font-family="'Share Tech Mono', monospace"
+        font-size="11" fill="#555">SCORE</text>
+    </svg>
+  </div>
+
+  <div class="digital" id="display">--</div>
+
+  <div class="controls">
+    <button class="btn btn-minus" id="btnMinus" onclick="change(-1)">−</button>
+    <button class="btn btn-plus" id="btnPlus" onclick="change(+1)">+</button>
+  </div>
+
+  <div class="status" id="status">connexion...</div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ============================================================
+  // 🔧 REMPLACE ICI par ta config Firebase (voir README)
+  const firebaseConfig = {
+    apiKey:            "VOTRE_API_KEY",
+    authDomain:        "VOTRE_PROJECT.firebaseapp.com",
+    databaseURL:       "https://VOTRE_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:         "VOTRE_PROJECT",
+    storageBucket:     "VOTRE_PROJECT.appspot.com",
+    messagingSenderId: "VOTRE_ID",
+    appId:             "VOTRE_APP_ID"
+  };
+  // ============================================================
+
+  const MIN = 0, MAX = 100;
+  let currentVal = 0;
+
+  // --- Gauge drawing ---
+  const START_ANGLE = -220; // degrees, 0 = right
+  const SWEEP = 260;        // total sweep in degrees
+  const R = 155;
+  const CX = 200, CY = 200;
+
+  function degToRad(d) { return d * Math.PI / 180; }
+
+  function polarToXY(angleDeg, r) {
+    const rad = degToRad(angleDeg);
+    return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+  }
+
+  function drawTicks() {
+    const ticksG = document.getElementById('ticks');
+    const labelsG = document.getElementById('labels');
+    ticksG.innerHTML = '';
+    labelsG.innerHTML = '';
+    const numMajor = 10;
+    const numMinor = 5;
+    for (let i = 0; i <= numMajor * numMinor; i++) {
+      const frac = i / (numMajor * numMinor);
+      const angle = START_ANGLE + frac * SWEEP;
+      const isMajor = (i % numMinor === 0);
+      const r1 = R, r2 = isMajor ? R - 20 : R - 10;
+      const p1 = polarToXY(angle, r1);
+      const p2 = polarToXY(angle, r2);
+      const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+      line.setAttribute('stroke', isMajor ? '#ccc' : '#555');
+      line.setAttribute('stroke-width', isMajor ? '2.5' : '1.2');
+      ticksG.appendChild(line);
+
+      if (isMajor) {
+        const lp = polarToXY(angle, R - 38);
+        const val = Math.round(frac * MAX);
+        const txt = document.createElementNS("http://www.w3.org/2000/svg","text");
+        txt.setAttribute('x', lp.x); txt.setAttribute('y', lp.y + 5);
+        txt.textContent = val;
+        labelsG.appendChild(txt);
+      }
+    }
+  }
+
+  function arcPath(fraction) {
+    const endAngle = START_ANGLE + fraction * SWEEP;
+    const start = polarToXY(START_ANGLE, R);
+    const end = polarToXY(endAngle, R);
+    const largeArc = fraction * SWEEP > 180 ? 1 : 0;
+    if (fraction <= 0) return '';
+    return `M ${start.x} ${start.y} A ${R} ${R} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+  }
+
+  function updateUI(val) {
+    currentVal = Math.max(MIN, Math.min(MAX, val));
+
+    // Needle rotation
+    const frac = (currentVal - MIN) / (MAX - MIN);
+    const angle = START_ANGLE + frac * SWEEP;
+    document.getElementById('needle').style.transform = `rotate(${angle + 90}deg)`;
+
+    // Arc fill
+    document.getElementById('arcFill').setAttribute('d', arcPath(frac));
+
+    // Digital display
+    const disp = document.getElementById('display');
+    disp.textContent = String(currentVal).padStart(3, '0');
+    // Color feedback
+    if (currentVal >= 80) {
+      disp.style.color = '#e84040';
+      disp.style.textShadow = '0 0 12px rgba(232,64,64,.8)';
+    } else if (currentVal <= 20) {
+      disp.style.color = '#40a8e8';
+      disp.style.textShadow = '0 0 12px rgba(64,168,232,.7)';
+    } else {
+      disp.style.color = '#40e880';
+      disp.style.textShadow = '0 0 12px rgba(64,232,128,.7)';
+    }
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + (cls || '');
+  }
+
+  drawTicks();
+  updateUI(0);
+
+  // --- Firebase ---
+  let db, scoreRef;
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getDatabase(app);
+    scoreRef = ref(db, 'score');
+
+    onValue(scoreRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val !== null) {
+        updateUI(val);
+        setStatus('● synchronisé', 'synced');
+      } else {
+        set(scoreRef, 0);
+      }
+    }, (err) => {
+      setStatus('⚠ erreur de connexion', 'error');
+      console.error(err);
+    });
+
+    setStatus('connexion...', 'syncing');
+  } catch(e) {
+    setStatus('⚠ config Firebase manquante', 'error');
+    console.warn('Firebase non configuré — mode local activé');
+    // Fallback local
+    const saved = localStorage.getItem('manon_score');
+    updateUI(saved !== null ? parseInt(saved) : 0);
+  }
+
+  // --- Button handler ---
+  window.change = function(delta) {
+    const newVal = Math.max(MIN, Math.min(MAX, currentVal + delta));
+    updateUI(newVal);
+    if (scoreRef) {
+      setStatus('envoi...', 'syncing');
+      set(scoreRef, newVal)
+        .then(() => setStatus('● synchronisé', 'synced'))
+        .catch(() => {
+          setStatus('⚠ erreur de sauvegarde', 'error');
+          localStorage.setItem('manon_score', newVal);
+        });
+    } else {
+      localStorage.setItem('manon_score', newVal);
+      setStatus('● local uniquement', '');
+    }
+  };
+</script>
+
+</body>
+</html>
