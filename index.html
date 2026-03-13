@@ -254,9 +254,9 @@
 
   function buildGauge() {
     document.getElementById('arcTrack')  .setAttribute('d', arcD(0, 1,    R));
-    document.getElementById('zoneGreen') .setAttribute('d', arcD(0, 0.40, R));
-    document.getElementById('zoneOrange').setAttribute('d', arcD(0.60, 0.80, R));
-    document.getElementById('zoneRed')   .setAttribute('d', arcD(0.80, 1, R));
+    document.getElementById('zoneRed')   .setAttribute('d', arcD(0, 0.40, R));
+    document.getElementById('zoneOrange').setAttribute('d', arcD(0.40, 0.60, R));
+    document.getElementById('zoneGreen') .setAttribute('d', arcD(0.60, 1,   R));
 
     const tG = document.getElementById('ticks');
     const lG = document.getElementById('labels');
@@ -283,7 +283,7 @@
         tx.setAttribute('x', lp.x); tx.setAttribute('y', lp.y);
         tx.setAttribute('font-size', '13');
         tx.setAttribute('font-weight', 'bold');
-        tx.setAttribute('fill', v >= 80 ? '#c06060' : v <= 40 ? '#60a060' : '#888');
+        tx.setAttribute('fill', v >= 60 ? '#60a060' : v <= 40 ? '#c06060' : '#888');
         tx.textContent = v;
         lG.appendChild(tx);
       }
@@ -300,10 +300,10 @@
 
     const d = document.getElementById('display');
     d.textContent = String(cur).padStart(3, '0');
-    if (cur >= 80) {
+    if (cur <= 20) {
       d.style.color = '#e84040'; d.style.textShadow = '0 0 12px rgba(232,64,64,.8)';
-    } else if (cur <= 20) {
-      d.style.color = '#40a8e8'; d.style.textShadow = '0 0 12px rgba(64,168,232,.7)';
+    } else if (cur >= 80) {
+      d.style.color = '#40e880'; d.style.textShadow = '0 0 12px rgba(64,232,128,.7)';
     } else {
       d.style.color = '#40e880'; d.style.textShadow = '0 0 12px rgba(64,232,128,.7)';
     }
@@ -352,8 +352,8 @@
     }
   }
 
-  document.getElementById('btnMinus').addEventListener('click', () => change(-1));
-  document.getElementById('btnPlus') .addEventListener('click', () => change(+1));
+  document.getElementById('btnMinus').addEventListener('click', () => change(-5));
+  document.getElementById('btnPlus') .addEventListener('click', () => change(+5));
 </script>
 
 </body>
