@@ -259,15 +259,28 @@
 
   // ============================================================
   // 🔧 REMPLACE ICI par ta config Firebase (voir README)
-  const firebaseConfig = {
-    apiKey:            "VOTRE_API_KEY",
-    authDomain:        "VOTRE_PROJECT.firebaseapp.com",
-    databaseURL:       "https://VOTRE_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:         "VOTRE_PROJECT",
-    storageBucket:     "VOTRE_PROJECT.appspot.com",
-    messagingSenderId: "VOTRE_ID",
-    appId:             "VOTRE_APP_ID"
-  };
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDGm-2BIn32uH5t17hQzwRqbT5T75vpTfw",
+  authDomain: "manon-metre.firebaseapp.com",
+  databaseURL: "https://manon-metre-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "manon-metre",
+  storageBucket: "manon-metre.firebasestorage.app",
+  messagingSenderId: "556156241308",
+  appId: "1:556156241308:web:3fadea39470b2483faf459",
+  measurementId: "G-PGRN3ZC8G2"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
   // ============================================================
 
   const MIN = 0, MAX = 100;
